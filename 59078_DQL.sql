@@ -48,3 +48,56 @@ JOIN
     Books bk ON b.BookID = bk.BookID
 WHERE 
     (SYSDATE - b.BorrowDate) > 30;
+
+-- Wyświetla listę książek, które są aktualnie wypożyczone
+SELECT 
+    b.BorrowingID, 
+    u.FirstName, 
+    u.LastName, 
+    b.BookID, 
+    bk.Title, 
+    b.BorrowDate, 
+    b.DueDate
+FROM 
+    Borrowings b
+JOIN 
+    Users u ON b.UserID = u.UserID
+JOIN 
+    Books bk ON b.BookID = bk.BookID
+WHERE 
+    b.ReturnDate IS NULL;
+
+-- Wyświetla listę książek, które nigdy nie były wypożyczone
+SELECT 
+    bk.BookID, 
+    bk.Title, 
+    bk.Genre, 
+    bk.PublishDate, 
+    a.FirstName || ' ' || a.LastName AS Author
+FROM 
+    Books bk
+LEFT JOIN 
+    BorrowingHistory bh ON bk.BookID = bh.BookID
+JOIN 
+    Authors a ON bk.AuthorID = a.AuthorID
+WHERE 
+    bh.BookID IS NULL;
+
+-- Wyświetla listę użytkowników, którzy wypożyczyli najwięcej książek w ciągu ostatniego roku
+SELECT 
+    u.UserID, 
+    u.FirstName, 
+    u.LastName, 
+    COUNT(h.BookID) AS BorrowCount
+FROM 
+    BorrowingHistory h
+JOIN 
+    Users u ON h.UserID = u.UserID
+WHERE 
+    h.BorrowDate >= ADD_MONTHS(SYSDATE, -12)
+GROUP BY 
+    u.UserID, 
+    u.FirstName, 
+    u.LastName
+ORDER BY 
+    BorrowCount DESC;
